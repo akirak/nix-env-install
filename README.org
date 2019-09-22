@@ -2,10 +2,7 @@
 * nix-env-install
 This package lets you install various (currently only npm) packages using the Nix package manager.
 
-# Add CI badges here
-
-#+BEGIN_HTML
-#+END_HTML
+[[https://travis-ci.org/akirak/nix-env-install][https://travis-ci.org/akirak/nix-env-install.svg?branch=master]]
 ** Table of contents
 :PROPERTIES:
 :TOC: siblings
