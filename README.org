@@ -1,0 +1,32 @@
+# -*- mode: org; mode: org-make-toc; -*-
+* nix-env-install
+This package lets you install various (currently only npm) packages using the Nix package manager.
+
+# Add CI badges here
+
+#+BEGIN_HTML
+#+END_HTML
+** Table of contents
+:PROPERTIES:
+:TOC: siblings
+:END:
+    -  [[#installation][Installation]]
+    -  [[#usage][Usage]]
+      -  [[#npm-packages][NPM packages]]
+      -  [[#uninstalling-packages][Uninstalling packages]]
+    -  [[#license][License]]
+
+** Installation
+This package is not available on MELPA yet, so please install it using Quelpa, straight.el, or any package manager you prefer.
+** Usage
+*** NPM packages
+Use =nix-env-install-npm= to install npm packages.
+*** Uninstalling packages
+You can use =nix-env-install-uninstall= to remove packages installed using =nix-env=.
+** License
+GPL v3
+** COMMENT Meta :noexport:
+:PROPERTIES:
+:TOC:      ignore
+:END:
+# The COMMENT keyword prevents GitHub's renderer from showing this entry.
