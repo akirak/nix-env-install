@@ -18,6 +18,8 @@ This package is not available on MELPA yet, so please install it using Quelpa, s
 ** Usage
 *** NPM packages
 Use =nix-env-install-npm= to install npm packages.
+
+It uses [[https://github.com/svanderburg/node2nix][node2nix]], as described in [[https://jingsi.space/post/2019/09/23/nix-install-npm-packages/][this blog post]].
 *** Uninstalling packages
 You can use =nix-env-install-uninstall= to remove packages installed using =nix-env=.
 ** License
