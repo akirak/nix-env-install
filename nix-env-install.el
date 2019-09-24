@@ -42,6 +42,42 @@
 (when (memq system-type '(ms-dos windows-nt cygwin))
   (user-error "Nix doesn't run on non-UNIX systems"))
 
+(defcustom nix-env-install-cachix-executable "cachix"
+  "Executable of cachix."
+  :group 'nix-env-install
+  :type 'file)
+
+;;;; Cachix support
+;;;###autoload
+(defun nix-env-install-cachix-exists-p ()
+  "Return non-nil if there is cachix executable."
+  (or (file-executable-p nix-env-install-cachix-executable)
+      (executable-find nix-env-install-cachix-executable)))
+
+;;;###autoload
+(defun nix-env-install-cachix ()
+  "Install cachix, if you haven't already."
+  (interactive)
+  (if (nix-env-install-cachix-exists-p)
+      (when (interactive-p)
+        (message "Cachix is already installed"))
+    (let ((buf (generate-new-buffer "*nix-env-install cachix*")))
+      (start-process "nix-env" buf
+                     "nix-env" "-iA" "cachix"
+                     "-f" "https://cachix.org/api/v1/install")
+      (pop-to-buffer buf)
+      (browse-url "https://cachix.org/")
+      (message "After cachix is installed, follow the instructions to set up your account."))))
+
+;;;###autoload
+(defun nix-env-install-cachix-use (name)
+  "Enable binary cache of NAME."
+  (interactive "SCachix: ")
+  (message (shell-command-to-string
+            "%s use %s"
+            (shell-quote-argument nix-env-install-cachix-executable)
+            (shell-quote-argument name))))
+
 ;;;; Uninstallation command
 ;;;###autoload
 (defun nix-env-install-uninstall (package)
