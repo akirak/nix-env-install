@@ -89,7 +89,7 @@
       (insert (json-encode (cl-typecase packages
                              (list packages)
                              (string (list packages)))))
-      (write-file packages-json-file))
+      (write-region (point-min) (point-max) packages-json-file))
     (message "Generating Nix expressions using node2nix for %s..." packages)
     (make-process :name "nix-env-install-node2nix"
                   :buffer "*nix-env-install node2nix*"
