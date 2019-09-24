@@ -68,8 +68,7 @@
                 (when (equal event "finished\n")
                   (message "Finished installing npm packages: %s" (quote ,packages)))
                 (unless (process-live-p proc)
-                  (delete-directory ,tmpdir t)
-                  )
+                  (delete-directory ,tmpdir t))
                 (when nix-env-install-after-npm-function
                   (funcall nix-env-install-after-npm-function p))))
          (s1 `(lambda (_proc event)
