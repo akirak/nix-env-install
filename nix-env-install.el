@@ -59,7 +59,7 @@
   "Install cachix, if you haven't already."
   (interactive)
   (if (nix-env-install-cachix-exists-p)
-      (when (interactive-p)
+      (when (called-interactively-p)
         (message "Cachix is already installed"))
     (let ((buf (generate-new-buffer "*nix-env-install cachix*")))
       (start-process "nix-env" buf
