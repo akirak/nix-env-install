@@ -74,9 +74,9 @@
   "Enable binary cache of NAME."
   (interactive "SCachix: ")
   (message (shell-command-to-string
-            "%s use %s"
-            (shell-quote-argument nix-env-install-cachix-executable)
-            (shell-quote-argument name))))
+            (format "%s use %s"
+                    (shell-quote-argument nix-env-install-cachix-executable)
+                    (shell-quote-argument name)))))
 
 ;;;; Uninstallation command
 ;;;###autoload
