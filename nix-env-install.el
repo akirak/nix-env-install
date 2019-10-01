@@ -48,6 +48,8 @@
   :type 'file)
 
 ;;;; Cachix support
+(defconst nix-env-install-cachix-buffer "*nix-env-install cachix*")
+
 (defun nix-env-install-cachix-exists-p ()
   "Return non-nil if there is cachix executable."
   (or (file-executable-p nix-env-install-cachix-executable)
@@ -60,7 +62,7 @@
   (if (nix-env-install-cachix-exists-p)
       (when (called-interactively-p 'interactive)
         (message "Cachix is already installed"))
-    (let ((buf (generate-new-buffer "*nix-env-install cachix*")))
+    (let ((buf (generate-new-buffer nix-env-install-cachix-buffer)))
       (start-process "nix-env" buf
                      "nix-env" "-iA" "cachix"
                      "-f" "https://cachix.org/api/v1/install")
@@ -90,6 +92,9 @@
             (format "nix-env -e %s" (shell-quote-argument package)))))
 
 ;;;; NPM for JavaScript/TypeScript
+(defconst nix-env-install-npm-buffer "*nix-env-install npm*")
+(defconst nix-env-install-node2nix-buffer "*nix-env-install node2nix*")
+
 (defcustom nix-env-install-after-npm-function nil
   "Function called after installation of npm packages."
   :type 'function
@@ -113,7 +118,7 @@
                 (when (equal event "finished\n")
                   (message "Installing npm packages using nix-env...")
                   (make-process :name "nix-env-install"
-                                :buffer "*nix-env-install npm*"
+                                :buffer nix-env-install-npm-buffer
                                 :command (quote ,(apply #'append
                                                         (list "nix-env"
                                                               "-f" (expand-file-name "default.nix" tmpdir)
@@ -130,7 +135,7 @@
       (write-region (point-min) (point-max) packages-json-file))
     (message "Generating Nix expressions using node2nix for %s..." packages)
     (make-process :name "nix-env-install-node2nix"
-                  :buffer "*nix-env-install node2nix*"
+                  :buffer nix-env-install-node2nix-buffer
                   :command `("nix-shell" "-p" "nodePackages.node2nix"
                              "--run" ,(format "node2nix -i %s --nodejs-10"
                                               packages-json-file))
