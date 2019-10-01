@@ -48,7 +48,6 @@
   :type 'file)
 
 ;;;; Cachix support
-;;;###autoload
 (defun nix-env-install-cachix-exists-p ()
   "Return non-nil if there is cachix executable."
   (or (file-executable-p nix-env-install-cachix-executable)
