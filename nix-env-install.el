@@ -42,13 +42,75 @@
 (when (memq system-type '(ms-dos windows-nt cygwin))
   (user-error "Nix doesn't run on non-UNIX systems"))
 
+(defcustom nix-env-install-display-process-buffers t
+  "Whether to display process buffers."
+  :group 'nix-env-install
+  :type 'boolean)
+
+(defcustom nix-env-install-window-height 10
+  "Window height of process buffers."
+  :group 'nix-env-install
+  :type 'number)
+
+(defcustom nix-env-install-display-buffer
+  'nix-env-install--display-buffer-default
+  "Function used to display process buffers."
+  :group 'nix-env-install
+  :type 'function)
+
 (defcustom nix-env-install-cachix-executable "cachix"
   "Executable of cachix."
   :group 'nix-env-install
   :type 'file)
 
+;;;; Utility functions
+(cl-defun nix-env-install--start-process (name buffer command
+                                               &key
+                                               (show-buffer nix-env-install-display-process-buffers)
+                                               on-finished
+                                               cleanup)
+  "Start an asynchronous process for running a system command.
+
+NAME, BUFFER, and COMMAND are the same as in `make-process'.
+COMMAND is a list of an executable name and arguments.
+
+ON-FINISHED is a function called after a successful exit of the
+command.
+
+CLEANUP is a function whenever the process exits."
+  (declare (indent 1))
+  (let ((sentinel (lambda (proc event)
+                    (unless (process-live-p proc)
+                      (when cleanup
+                        (funcall cleanup)))
+                    (when (and (equal event "finished\n")
+                               on-finished)
+                      (funcall on-finished)))))
+    (make-process :name name
+                  :buffer buffer
+                  :command command
+                  :sentinel sentinel)
+    (when show-buffer
+      (funcall nix-env-install-display-buffer buffer))))
+
+(defvar nix-env-install-process-window nil)
+
+(defun nix-env-install--display-buffer-default (buffer)
+  "Display BUFFER in a new dedicated window."
+  (let ((window (or (and nix-env-install-process-window
+                         (window-live-p nix-env-install-process-window)
+                         nix-env-install-process-window)
+                    (setq nix-env-install-process-window
+                          (split-window-below (- (window-height)
+                                                 nix-env-install-window-height))))))
+    (when (window-dedicated-p window)
+      (set-window-dedicated-p window nil))
+    (set-window-buffer window buffer)
+    (set-window-dedicated-p window t)))
+
 ;;;; Cachix support
-;;;###autoload
+(defconst nix-env-install-cachix-buffer "*nix-env-install cachix*")
+
 (defun nix-env-install-cachix-exists-p ()
   "Return non-nil if there is cachix executable."
   (or (file-executable-p nix-env-install-cachix-executable)
@@ -61,22 +123,26 @@
   (if (nix-env-install-cachix-exists-p)
       (when (called-interactively-p 'interactive)
         (message "Cachix is already installed"))
-    (let ((buf (generate-new-buffer "*nix-env-install cachix*")))
-      (start-process "nix-env" buf
-                     "nix-env" "-iA" "cachix"
-                     "-f" "https://cachix.org/api/v1/install")
-      (pop-to-buffer buf)
-      (browse-url "https://cachix.org/")
-      (message "After cachix is installed, follow the instructions to set up your account."))))
+    (nix-env-install--start-process
+        "nix-env" nix-env-install-cachix-buffer
+        '("nix-env" "-iA" "cachix"
+          "-f" "https://cachix.org/api/v1/install")
+        :on-finished
+        (lambda ()
+          (browse-url "https://cachix.org/")
+          (message "After cachix is installed, follow the instructions to set up your account.")))))
 
 ;;;###autoload
 (defun nix-env-install-cachix-use (name)
   "Enable binary cache of NAME."
   (interactive "SCachix: ")
-  (message (shell-command-to-string
-            (format "%s use %s"
-                    (shell-quote-argument nix-env-install-cachix-executable)
-                    (shell-quote-argument name)))))
+  (if (nix-env-install-cachix-exists-p)
+      (message (shell-command-to-string
+                (format "%s use %s"
+                        (shell-quote-argument nix-env-install-cachix-executable)
+                        (shell-quote-argument name))))
+    (when (yes-or-no-p "Cachix is not installed yet. Install it? ")
+      (nix-env-install-cachix))))
 
 ;;;; Uninstallation command
 ;;;###autoload
@@ -88,51 +154,59 @@
             (format "nix-env -e %s" (shell-quote-argument package)))))
 
 ;;;; NPM for JavaScript/TypeScript
+(defconst nix-env-install-npm-buffer "*nix-env-install npm*")
+(defconst nix-env-install-node2nix-buffer "*nix-env-install node2nix*")
+
 (defcustom nix-env-install-after-npm-function nil
   "Function called after installation of npm packages."
   :type 'function
   :group 'nix-env-install)
 
+(defun nix-env-install--node2nix-temp-dir ()
+  "Generate a temporary directory for node2nix."
+  (string-trim-right
+   (shell-command-to-string "mktemp -d -t emacs-node2nix-XXX")))
+
 ;;;###autoload
 (defun nix-env-install-npm (packages)
   "Install PACKAGES from npm using Nix."
   (interactive (list (split-string (read-string "npm packages: ") " ")))
-  (let* ((tmpdir (string-trim-right (shell-command-to-string "mktemp -d -t emacs-node2nix-XXX")))
+  (unless packages
+    (user-error "PACKAGES cannot be nil"))
+  (let* ((tmpdir (nix-env-install--node2nix-temp-dir))
          (default-directory tmpdir)
-         (packages-json-file (expand-file-name "npm-packages.json" tmpdir))
-         (s2 `(lambda (proc event)
-                (when (equal event "finished\n")
-                  (message "Finished installing npm packages: %s" (quote ,packages)))
-                (unless (process-live-p proc)
-                  (delete-directory ,tmpdir t))
-                (when nix-env-install-after-npm-function
-                  (funcall nix-env-install-after-npm-function p))))
-         (s1 `(lambda (_proc event)
-                (when (equal event "finished\n")
-                  (message "Installing npm packages using nix-env...")
-                  (make-process :name "nix-env-install"
-                                :buffer "*nix-env-install npm*"
-                                :command (quote ,(apply #'append
-                                                        (list "nix-env"
-                                                              "-f" (expand-file-name "default.nix" tmpdir)
-                                                              "-i")
-                                                        (mapcar (lambda (it) (list "-A" it))
-                                                                (cl-etypecase packages
-                                                                  (list packages)
-                                                                  (string (list packages))))))
-                                :sentinel ,s2)))))
+         (packages-json-file (expand-file-name "npm-packages.json" tmpdir)))
     (with-temp-buffer
       (insert (json-encode (cl-typecase packages
                              (list packages)
                              (string (list packages)))))
       (write-region (point-min) (point-max) packages-json-file))
     (message "Generating Nix expressions using node2nix for %s..." packages)
-    (make-process :name "nix-env-install-node2nix"
-                  :buffer "*nix-env-install node2nix*"
-                  :command `("nix-shell" "-p" "nodePackages.node2nix"
-                             "--run" ,(format "node2nix -i %s --nodejs-10"
-                                              packages-json-file))
-                  :sentinel s1)))
+    (nix-env-install--start-process
+        "nix-env-install-node2nix" nix-env-install-node2nix-buffer
+        `("nix-shell" "-p" "nodePackages.node2nix"
+          "--run" ,(format "node2nix -i %s --nodejs-10" packages-json-file))
+        :on-finished
+        `(lambda ()
+           (message "Installing npm packages using nix-env...")
+           (nix-env-install--start-process
+               "nix-env"
+             nix-env-install-npm-buffer
+             ',(apply #'append
+                      (list "nix-env"
+                            "-f" (expand-file-name "default.nix" tmpdir)
+                            "-i")
+                      (mapcar (lambda (it) (list "-A" it))
+                              (cl-etypecase packages
+                                (list packages)
+                                (string (list packages)))))
+             :on-finished
+             ,`(lambda ()
+                 (message "Finished installing npm packages: %s" (quote ,packages))
+                 (when nix-env-install-after-npm-function
+                   (funcall nix-env-install-after-npm-function)))
+             :cleanup
+             ,`(lambda () (delete-directory ,tmpdir t)))))))
 
 (provide 'nix-env-install)
 ;;; nix-env-install.el ends here
