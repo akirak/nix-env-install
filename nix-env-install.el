@@ -157,9 +157,9 @@ CLEANUP is a function whenever the process exits."
 (defconst nix-env-install-npm-buffer "*nix-env-install npm*")
 (defconst nix-env-install-node2nix-buffer "*nix-env-install node2nix*")
 
-(defcustom nix-env-install-after-npm-function nil
-  "Function called after installation of npm packages."
-  :type 'function
+(defcustom nix-env-install-npm-install-hook nil
+  "Hooks called after installation of npm packages."
+  :type 'hook
   :group 'nix-env-install)
 
 (defun nix-env-install--node2nix-temp-dir ()
@@ -203,8 +203,7 @@ CLEANUP is a function whenever the process exits."
              :on-finished
              ,`(lambda ()
                  (message "Finished installing npm packages: %s" (quote ,packages))
-                 (when nix-env-install-after-npm-function
-                   (funcall nix-env-install-after-npm-function)))
+                 (run-hooks 'nix-env-install-npm-install-hook))
              :cleanup
              ,`(lambda () (delete-directory ,tmpdir t)))))))
 
