@@ -163,6 +163,7 @@ CLEANUP is a function whenever the process exits."
   :group 'nix-env-install)
 
 (defun nix-env-install--node2nix-temp-dir ()
+  "Generate a temporary directory for node2nix."
   (string-trim-right
    (shell-command-to-string "mktemp -d -t emacs-node2nix-XXX")))
 
