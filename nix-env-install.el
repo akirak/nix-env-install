@@ -108,12 +108,12 @@
          (default-directory tmpdir)
          (packages-json-file (expand-file-name "npm-packages.json" tmpdir))
          (s2 `(lambda (proc event)
-                (when (equal event "finished\n")
-                  (message "Finished installing npm packages: %s" (quote ,packages)))
                 (unless (process-live-p proc)
                   (delete-directory ,tmpdir t))
-                (when nix-env-install-after-npm-function
-                  (funcall nix-env-install-after-npm-function p))))
+                (when (equal event "finished\n")
+                  (message "Finished installing npm packages: %s" (quote ,packages))
+                  (when nix-env-install-after-npm-function
+                    (funcall nix-env-install-after-npm-function)))))
          (s1 `(lambda (_proc event)
                 (when (equal event "finished\n")
                   (message "Installing npm packages using nix-env...")
