@@ -95,6 +95,12 @@ CLEANUP is a function whenever the process exits."
 
 (defvar nix-env-install-process-window nil)
 
+(defun nix-env-install--delete-process-window ()
+  "Delete the window for processes."
+  (when (and nix-env-install-process-window
+             (window-live-p nix-env-install-process-window))
+    (delete-window nix-env-install-process-window)))
+
 (defun nix-env-install--display-buffer-default (buffer)
   "Display BUFFER in a new dedicated window."
   (let ((window (or (and nix-env-install-process-window
@@ -202,6 +208,7 @@ CLEANUP is a function whenever the process exits."
                                 (string (list packages)))))
              :on-finished
              ,`(lambda ()
+                 (nix-env-install--delete-process-window)
                  (message "Finished installing npm packages: %s" (quote ,packages))
                  (run-hooks 'nix-env-install-npm-install-hook))
              :cleanup
