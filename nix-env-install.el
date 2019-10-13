@@ -63,6 +63,12 @@
   :group 'nix-env-install
   :type 'file)
 
+(defvar nix-env-install-start-process-hook nil
+  "Hook to run immediately after creating a process in this package.
+
+This hook is run in process buffers, so you can use it to
+convert the output of each program, for example.")
+
 ;;;; Utility functions
 (cl-defun nix-env-install--start-process (name buffer command
                                                &key
@@ -79,17 +85,19 @@ command.
 
 CLEANUP is a function whenever the process exits."
   (declare (indent 1))
-  (let ((sentinel (lambda (proc event)
-                    (unless (process-live-p proc)
-                      (when cleanup
-                        (funcall cleanup)))
-                    (when (and (equal event "finished\n")
-                               on-finished)
-                      (funcall on-finished)))))
-    (make-process :name name
-                  :buffer buffer
-                  :command command
-                  :sentinel sentinel)
+  (let* ((sentinel (lambda (proc event)
+                     (unless (process-live-p proc)
+                       (when cleanup
+                         (funcall cleanup)))
+                     (when (and (equal event "finished\n")
+                                on-finished)
+                       (funcall on-finished))))
+         (proc (make-process :name name
+                             :buffer buffer
+                             :command command
+                             :sentinel sentinel)))
+    (with-current-buffer (process-buffer process)
+      (run-hooks 'nix-env-install-start-process-hook))
     (when show-buffer
       (funcall nix-env-install-display-buffer buffer))))
 
