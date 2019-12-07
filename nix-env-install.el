@@ -63,6 +63,15 @@
   :group 'nix-env-install
   :type 'file)
 
+(defcustom nix-env-install-process-environment '("NIX_BUILD_SHELL")
+  "Additional entries for `process-environment' which possibly override the default ones.
+
+If you set NIX_BUILD_SHELL to something like zsh in your shell,
+you need to unset it when you run commands in nix-shell.
+This variable allows that."
+  :group 'nix-env-install
+  :type '(repeat string))
+
 (defvar nix-env-install-start-process-hook nil
   "Hook to run immediately after creating a process in this package.
 
@@ -92,14 +101,40 @@ CLEANUP is a function whenever the process exits."
                      (when (and (equal event "finished\n")
                                 on-finished)
                        (funcall on-finished))))
-         (proc (make-process :name name
-                             :buffer buffer
-                             :command command
-                             :sentinel sentinel)))
+         (proc (let ((process-environment (nix-env-install--make-process-environment)))
+                 (make-process :name name
+                               :buffer buffer
+                               :command command
+                               :sentinel sentinel))))
     (with-current-buffer (process-buffer proc)
       (run-hooks 'nix-env-install-start-process-hook))
     (when show-buffer
       (funcall nix-env-install-display-buffer buffer))))
+
+(defun nix-env-install--make-process-environment ()
+  "Make a new value of `process-enviroment' with `nix-env-install-process-environment' merged."
+  (let ((alist (mapcar (lambda (raw-form)
+                         (cons (car (nix-env-install--parse-environment raw-form)) raw-form))
+                       process-environment)))
+    (dolist (raw-form nix-env-install-process-environment)
+      (let* ((our-env (nix-env-install--parse-environment raw-form))
+             (base-env (assoc (car our-env) alist #'string-equal)))
+        (if base-env
+            (setcdr base-env (cdr our-env))
+          (push (cons (car our-env) raw-form) alist))))
+    (mapcar #'cdr alist)))
+
+(defun nix-env-install--parse-environment (raw-form)
+  "Return a cell of key and value from the RAW-FORM of a key=value pair.
+
+If the equal sign is not contained in the form, it returns a cell
+where the key is the form and the value is nil."
+  (if (string-match (rx bol (group (+ (not (any "="))))
+                        "=" (group (+? anything)) eol)
+                    raw-form)
+      (cons (match-string 1 raw-form)
+            (match-string 2 raw-form))
+    (cons raw-form nil)))
 
 (defvar nix-env-install-process-window nil)
 
