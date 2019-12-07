@@ -72,6 +72,11 @@ This variable allows that."
   :group 'nix-env-install
   :type '(repeat string))
 
+(defcustom nix-env-install-process-filter #'compilation-filter
+  "Filter function for processes."
+  :group 'nix-env-install
+  :type 'function)
+
 (defvar nix-env-install-start-process-hook nil
   "Hook to run immediately after creating a process in this package.
 
@@ -105,6 +110,7 @@ CLEANUP is a function whenever the process exits."
                  (make-process :name name
                                :buffer buffer
                                :command command
+                               :filter nix-env-install-process-filter
                                :sentinel sentinel))))
     (with-current-buffer (process-buffer proc)
       (run-hooks 'nix-env-install-start-process-hook))
