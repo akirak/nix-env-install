@@ -47,7 +47,7 @@
   :group 'nix-env-install
   :type 'boolean)
 
-(defcustom nix-env-install-window-height 10
+(defcustom nix-env-install-window-height 15
   "Window height of process buffers."
   :group 'nix-env-install
   :type 'number)
