@@ -85,27 +85,49 @@ convert the output of each program, for example.")
 
 ;;;; Utility functions
 (cl-defun nix-env-install--start-process (name buffer command
-                                               &key
-                                               (show-buffer nix-env-install-display-process-buffers)
-                                               on-finished
-                                               cleanup)
+                                &key
+                                clear-buffer
+                                (show-buffer nix-env-install-display-process-buffers)
+                                on-finished on-error
+                                cleanup)
   "Start an asynchronous process for running a system command.
 
 NAME, BUFFER, and COMMAND are the same as in `make-process'.
 COMMAND is a list of an executable name and arguments.
 
+When CLEAR-BUFFER is non-nil, the buffer is erased before the
+process starts.
+
+When SHOW-BUFFER is non-nil, it is used to display the buffer.
+
 ON-FINISHED is a function called after a successful exit of the
-command.
+command.  ON-ERROR is a function called when the process exits
+with a non-zero exit code.
 
 CLEANUP is a function whenever the process exits."
   (declare (indent 1))
+  (when (and clear-buffer
+             (get-buffer buffer))
+    (with-current-buffer buffer
+      (erase-buffer)))
   (let* ((sentinel (lambda (proc event)
+                     (with-current-buffer (process-buffer proc)
+                       (goto-char (point-max)))
                      (unless (process-live-p proc)
                        (when cleanup
                          (funcall cleanup)))
-                     (when (and (equal event "finished\n")
-                                on-finished)
-                       (funcall on-finished))))
+                     (cond
+                      ((and (equal event "finished\n")
+                            on-finished)
+                       (funcall on-finished))
+                      ((or (string-match (rx "exited abnormally with code " (group (+ digit)))
+                                         event)
+                           (string-match (rx "failed with code " (group (+ digit)))
+                                         event))
+                       (if on-error
+                           (funcall on-error)
+                         (message "Process %s has exited with %s" name
+                                  (match-string 1 event)))))))
          (proc (let ((process-environment (nix-env-install--make-process-environment)))
                  (make-process :name name
                                :buffer buffer
@@ -242,6 +264,7 @@ where the key is the form and the value is nil."
         "nix-env-install-node2nix" nix-env-install-node2nix-buffer
         `("nix-shell" "-p" "nodePackages.node2nix"
           "--run" ,(format "node2nix -i %s --nodejs-10" packages-json-file))
+        :clear-buffer t
         :on-finished
         `(lambda ()
            (message "Installing npm packages using nix-env...")
