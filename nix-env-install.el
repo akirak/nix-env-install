@@ -113,6 +113,7 @@ CLEANUP is a function whenever the process exits."
                                :filter nix-env-install-process-filter
                                :sentinel sentinel))))
     (with-current-buffer (process-buffer proc)
+      (setq-local header-line-format nil)
       (run-hooks 'nix-env-install-start-process-hook))
     (when show-buffer
       (funcall nix-env-install-display-buffer buffer))))
