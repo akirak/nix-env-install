@@ -179,8 +179,14 @@ where the key is the form and the value is nil."
                          (window-live-p nix-env-install-process-window)
                          nix-env-install-process-window)
                     (setq nix-env-install-process-window
-                          (split-window-below (- (window-height)
-                                                 nix-env-install-window-height))))))
+                          (with-selected-window
+                              (catch 'bottom
+                                (walk-window-tree
+                                 (lambda (w)
+                                   (unless (window-in-direction 'below w)
+                                     (throw 'bottom w)))))
+                            (split-window-vertically
+                             (- (window-height) nix-env-install-window-height)))))))
     (when (window-dedicated-p window)
       (set-window-dedicated-p window nil))
     (set-window-buffer window buffer)
