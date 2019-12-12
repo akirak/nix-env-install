@@ -72,7 +72,7 @@ This variable allows that."
   :group 'nix-env-install
   :type '(repeat string))
 
-(defcustom nix-env-install-process-filter #'compilation-filter
+(defcustom nix-env-install-process-filter #'nix-env-install-default-process-filter
   "Filter function for processes."
   :group 'nix-env-install
   :type 'function)
@@ -139,6 +139,16 @@ CLEANUP is a function whenever the process exits."
       (run-hooks 'nix-env-install-start-process-hook))
     (when show-buffer
       (funcall nix-env-install-display-buffer buffer))))
+
+(defun nix-env-install-default-process-filter (proc str)
+  "Default process filter.
+
+PROC is the process, and STR is the string."
+  (when-let* ((buf (process-buffer proc))
+              (window (get-buffer-window buf)))
+    (with-selected-window window
+      (goto-char (point-max))
+      (recenter -1))))
 
 (defun nix-env-install--make-process-environment ()
   "Make a new value of `process-enviroment' with `nix-env-install-process-environment' merged."
