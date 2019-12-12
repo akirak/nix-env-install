@@ -92,7 +92,7 @@ convert the output of each program, for example.")
 (cl-defun nix-env-install--start-process (name buffer command
                                 &key
                                 clear-buffer
-                                (show-buffer nix-env-install-display-process-buffers)
+                                (display-buffer nix-env-install-display-process-buffers)
                                 on-finished on-error
                                 cleanup)
   "Start an asynchronous process for running a system command.
@@ -142,8 +142,11 @@ CLEANUP is a function whenever the process exits."
     (with-current-buffer (process-buffer proc)
       (setq-local header-line-format nil)
       (run-hooks 'nix-env-install-start-process-hook))
-    (when show-buffer
-      (funcall nix-env-install-display-buffer buffer))))
+    (when display-buffer
+      (funcall (if (functionp display-buffer)
+                   display-buffer
+                 nix-env-install-display-buffer)
+               buffer))))
 
 (defun nix-env-install-default-process-filter (proc str)
   "Default process filter.
