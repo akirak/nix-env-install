@@ -77,6 +77,11 @@ This variable allows that."
   :group 'nix-env-install
   :type 'function)
 
+(defcustom nix-env-install-npm-node2nix-options "--nodejs-10"
+  "Additional command line arguments for node2nix."
+  :group 'nix-env-install
+  :type 'string)
+
 (defvar nix-env-install-start-process-hook nil
   "Hook to run immediately after creating a process in this package.
 
@@ -279,7 +284,8 @@ where the key is the form and the value is nil."
     (nix-env-install--start-process
         "nix-env-install-node2nix" nix-env-install-node2nix-buffer
         `("nix-shell" "-p" "nodePackages.node2nix"
-          "--run" ,(format "node2nix -i %s --nodejs-10" packages-json-file))
+          "--run" ,(format "node2nix -i %s %s" packages-json-file
+                           nix-env-install-npm-node2nix-options))
         :clear-buffer t
         :on-finished
         `(lambda ()
