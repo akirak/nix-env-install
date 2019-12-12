@@ -64,10 +64,13 @@
   :type 'file)
 
 (defcustom nix-env-install-process-environment '("NIX_BUILD_SHELL")
-  "Additional entries for `process-environment' which possibly override the default ones.
+  "Additional environment variables for processes.
+
+The entries in this variables are added to `process-environment'
+and possibly overrides existing ones.
 
 If you set NIX_BUILD_SHELL to something like zsh in your shell,
-you need to unset it when you run commands in nix-shell.
+you need to unset it when you run commands in \"nix-shell\".
 This variable allows that."
   :group 'nix-env-install
   :type '(repeat string))
@@ -103,7 +106,9 @@ COMMAND is a list of an executable name and arguments.
 When CLEAR-BUFFER is non-nil, the buffer is erased before the
 process starts.
 
-When SHOW-BUFFER is non-nil, it is used to display the buffer.
+When DISPLAY-BUFFER is non-nil, the buffer is displayed.
+If it is a function, it is used to display the buffer.
+Otherwise, `nix-env-install-display-buffer' is used.
 
 ON-FINISHED is a function called after a successful exit of the
 command.  ON-ERROR is a function called when the process exits
@@ -148,15 +153,16 @@ CLEANUP is a function whenever the process exits."
                  nix-env-install-display-buffer)
                buffer))))
 
-(defun nix-env-install-default-process-filter (proc str)
+(defun nix-env-install-default-process-filter (proc _str)
   "Default process filter.
 
 PROC is the process, and STR is the string."
-  (when-let* ((buf (process-buffer proc))
-              (window (get-buffer-window buf)))
-    (with-selected-window window
-      (goto-char (point-max))
-      (recenter -1))))
+  (let* ((buf (process-buffer proc))
+         (window (get-buffer-window buf)))
+    (when window
+      (with-selected-window window
+        (goto-char (point-max))
+        (recenter -1)))))
 
 (defun nix-env-install--make-process-environment ()
   "Make a new value of `process-enviroment' with `nix-env-install-process-environment' merged."
