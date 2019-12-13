@@ -80,6 +80,11 @@ This variable allows that."
   :group 'nix-env-install
   :type 'function)
 
+(defcustom nix-env-install-delete-process-window t
+  "When non-nil, delete the process window on success."
+  :group 'nix-env-install
+  :type 'boolean)
+
 (defcustom nix-env-install-npm-node2nix-options "--nodejs-10"
   "Additional command line arguments for node2nix."
   :group 'nix-env-install
@@ -182,7 +187,8 @@ where the key is the form and the value is nil."
 
 (defun nix-env-install--delete-process-window ()
   "Delete the window for processes."
-  (when (and nix-env-install-process-window
+  (when (and nix-env-install-delete-process-window
+             nix-env-install-process-window
              (window-live-p nix-env-install-process-window))
     (delete-window nix-env-install-process-window)))
 
