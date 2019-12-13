@@ -1,8 +1,6 @@
 # -*- mode: org; mode: org-make-toc; -*-
 * nix-env-install
 This package lets you install various (currently only npm) packages using the Nix package manager.
-
-[[https://travis-ci.org/akirak/nix-env-install][https://travis-ci.org/akirak/nix-env-install.svg?branch=master]]
 ** Table of contents
 :PROPERTIES:
 :TOC: siblings
