@@ -80,6 +80,22 @@ This variable allows that."
   :group 'nix-env-install
   :type 'function)
 
+(defcustom nix-env-install-process-output-filter
+  (cond
+   ;; Function from xterm-color package.
+   ;; Seems to properly propertizes colorized output from terminal
+   ;; commands.
+   ((fboundp #'xterm-color-filter)
+    #'xterm-color-filter)
+   ;; Function from ansi-color package.
+   ;; Doesn't colorize terminal commands when TERM is set to dumb,
+   ;; but it gets rid of ugly escape sequences.
+   ((fboundp #'ansi-color-filter-apply)
+    #'ansi-color-filter-apply))
+  "Function used to handle output from processes."
+  :group 'nix-env-install
+  :type '(choice function nil))
+
 (defcustom nix-env-install-delete-process-window t
   "When non-nil, delete the process window on success."
   :group 'nix-env-install
@@ -160,7 +176,7 @@ CLEANUP is a function whenever the process exits."
                  nix-env-install-display-buffer)
                buffer))))
 
-(defun nix-env-install-default-process-filter (proc _str)
+(defun nix-env-install-default-process-filter (proc str)
   "Default process filter.
 
 PROC is the process, and STR is the string."
@@ -169,6 +185,9 @@ PROC is the process, and STR is the string."
     (when window
       (with-selected-window window
         (goto-char (point-max))
+        (insert (if nix-env-install-process-output-filter
+                    (funcall nix-env-install-process-output-filter str)
+                  str))
         (recenter -1)))))
 
 (defun nix-env-install--make-process-environment ()
