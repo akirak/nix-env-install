@@ -91,6 +91,8 @@ This variable allows that."
 This hook is run in process buffers, so you can use it to
 convert the output of each program, for example.")
 
+(defvar nix-env-install-process-window nil)
+
 ;;;; Utility functions
 (cl-defun nix-env-install--start-process (name buffer command
                                 &key
@@ -188,8 +190,6 @@ where the key is the form and the value is nil."
       (cons (match-string 1 raw-form)
             (match-string 2 raw-form))
     (cons raw-form nil)))
-
-(defvar nix-env-install-process-window nil)
 
 (defun nix-env-install--delete-process-window ()
   "Delete the window for processes."
