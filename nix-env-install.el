@@ -35,6 +35,9 @@
 (require 'subr-x)
 (require 'json)
 
+(declare-function xterm-color-filter "ext:xterm-color")
+(declare-function ansi-color-filter-apply "ext:ansi-color")
+
 (defgroup nix-env-install nil
   "Install packages using nix-env."
   :group 'nix)
