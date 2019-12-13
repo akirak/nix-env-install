@@ -188,22 +188,19 @@ where the key is the form and the value is nil."
 
 (defun nix-env-install--display-buffer-default (buffer)
   "Display BUFFER in a new dedicated window."
-  (let ((window (or (and nix-env-install-process-window
-                         (window-live-p nix-env-install-process-window)
-                         nix-env-install-process-window)
-                    (setq nix-env-install-process-window
-                          (with-selected-window
-                              (catch 'bottom
-                                (walk-window-tree
-                                 (lambda (w)
-                                   (unless (window-in-direction 'below w)
-                                     (throw 'bottom w)))))
-                            (split-window-vertically
-                             (- (window-height) nix-env-install-window-height)))))))
-    (when (window-dedicated-p window)
-      (set-window-dedicated-p window nil))
-    (set-window-buffer window buffer)
-    (set-window-dedicated-p window t)))
+  (if-let ((window (and nix-env-install-process-window
+                        (window-live-p nix-env-install-process-window)
+                        nix-env-install-process-window)))
+      (progn
+        (when (window-dedicated-p window)
+          (set-window-dedicated-p window nil))
+        (set-window-buffer window buffer)
+        (set-window-dedicated-p window t))
+    (setq nix-env-install-process-window
+          (display-buffer-in-side-window
+           buffer
+           `((side . bottom)
+             (height . ,nix-env-install-window-height))))))
 
 ;;;; Cachix support
 (defconst nix-env-install-cachix-buffer "*nix-env-install cachix*")
