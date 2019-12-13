@@ -255,7 +255,6 @@ where the key is the form and the value is nil."
 
 ;;;; NPM for JavaScript/TypeScript
 (defconst nix-env-install-npm-buffer "*nix-env-install npm*")
-(defconst nix-env-install-node2nix-buffer "*nix-env-install node2nix*")
 
 (defcustom nix-env-install-npm-install-hook nil
   "Hooks called after installation of npm packages."
@@ -283,7 +282,7 @@ where the key is the form and the value is nil."
       (write-region (point-min) (point-max) packages-json-file))
     (message "Generating Nix expressions using node2nix for %s..." packages)
     (nix-env-install--start-process
-        "nix-env-install-node2nix" nix-env-install-node2nix-buffer
+        "nix-env-install-node2nix" nix-env-install-npm-buffer
         `("nix-shell" "-p" "nodePackages.node2nix"
           "--run" ,(format "node2nix -i %s %s" packages-json-file
                            nix-env-install-npm-node2nix-options))
