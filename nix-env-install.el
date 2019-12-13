@@ -35,6 +35,9 @@
 (require 'subr-x)
 (require 'json)
 
+(declare-function xterm-color-filter "ext:xterm-color")
+(declare-function ansi-color-filter-apply "ext:ansi-color")
+
 (defgroup nix-env-install nil
   "Install packages using nix-env."
   :group 'nix)
@@ -197,7 +200,7 @@ PROC is the process, and STR is the string."
                        process-environment)))
     (dolist (raw-form nix-env-install-process-environment)
       (let* ((our-env (nix-env-install--parse-environment raw-form))
-             (base-env (assoc (car our-env) alist #'string-equal)))
+             (base-env (assoc (car our-env) alist)))
         (if base-env
             (setcdr base-env (cdr our-env))
           (push (cons (car our-env) raw-form) alist))))
