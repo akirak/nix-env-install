@@ -268,12 +268,16 @@ where the key is the form and the value is nil."
 ;;;###autoload
 (defun nix-env-install-cachix-use (name)
   "Enable binary cache of NAME."
-  (interactive "SCachix: ")
+  (interactive "sCachix: ")
   (if (nix-env-install-cachix-exists-p)
-      (message (shell-command-to-string
-                (format "%s use %s"
-                        (shell-quote-argument nix-env-install-cachix-executable)
-                        (shell-quote-argument name))))
+      (nix-env-install--start-process
+          "cachix" nix-env-install-cachix-buffer
+          (list nix-env-install-cachix-executable "use" name)
+          :display-buffer nil
+          :on-finished
+          (lambda ()
+            (nix-env-install--delete-process-window)
+            (message "Successfully enabled cachix from %s" name)))
     (when (yes-or-no-p "Cachix is not installed yet. Install it? ")
       (nix-env-install-cachix))))
 
