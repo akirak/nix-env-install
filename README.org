@@ -1,5 +1,7 @@
 # -*- mode: org; mode: org-make-toc; -*-
 * nix-env-install
+[[https://github.com/akirak/nix-env-install/workflows/CI/badge.svg]]
+
 This package lets you install various (currently only npm) packages using the Nix package manager.
 ** Table of contents
 :PROPERTIES:
