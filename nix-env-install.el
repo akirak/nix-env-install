@@ -228,8 +228,7 @@ where the key is the form and the value is nil."
 (defun nix-env-install--display-buffer-default (buffer)
   "Display BUFFER in a new dedicated window."
   (if-let ((window (and nix-env-install-process-window
-                        (window-live-p nix-env-install-process-window)
-                        nix-env-install-process-window)))
+                        (window-live-p nix-env-install-process-window))))
       (progn
         (when (window-dedicated-p window)
           (set-window-dedicated-p window nil))
