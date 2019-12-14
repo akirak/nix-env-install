@@ -248,8 +248,7 @@ where the key is the form and the value is nil."
   (or (file-executable-p nix-env-install-cachix-executable)
       (executable-find nix-env-install-cachix-executable)))
 
-;;;###autoload
-(defun nix-env-install-cachix ()
+(cl-defun nix-env-install-cachix (&key (on-finished #'nix-env-install-cachix-setup))
   "Install cachix, if you haven't already."
   (interactive)
   (if (nix-env-install-cachix-exists-p)
@@ -259,22 +258,28 @@ where the key is the form and the value is nil."
         "nix-env" nix-env-install-cachix-buffer
         '("nix-env" "-iA" "cachix"
           "-f" "https://cachix.org/api/v1/install")
-        :on-finished
-        (lambda ()
-          (browse-url "https://cachix.org/")
-          (message "After cachix is installed, follow the instructions to set up your account.")))))
+        :on-finished on-finished)))
+
+(defun nix-env-install-cachix-setup ()
+  "Start an interactive setup of cachix."
+  (browse-url "https://cachix.org/")
+  (message "After cachix is installed, follow the instructions to set up your account."))
 
 ;;;###autoload
 (defun nix-env-install-cachix-use (name)
   "Enable binary cache of NAME."
-  (interactive "SCachix: ")
+  (interactive "sCachix: ")
   (if (nix-env-install-cachix-exists-p)
-      (message (shell-command-to-string
-                (format "%s use %s"
-                        (shell-quote-argument nix-env-install-cachix-executable)
-                        (shell-quote-argument name))))
+      (nix-env-install--start-process
+          "cachix" nix-env-install-cachix-buffer
+          (list nix-env-install-cachix-executable "use" name)
+          :display-buffer nil
+          :on-finished
+          (lambda ()
+            (nix-env-install--delete-process-window)
+            (message "Successfully enabled cachix from %s" name)))
     (when (yes-or-no-p "Cachix is not installed yet. Install it? ")
-      (nix-env-install-cachix))))
+      (nix-env-install-cachix :on-finished `(lambda () (nix-env-install-cachix-use ,name))))))
 
 ;;;; Uninstallation command
 ;;;###autoload
