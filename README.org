@@ -16,7 +16,7 @@ This package lets you install various (currently only npm) packages using the Ni
     -  [[#license][License]]
 
 ** Installation
-This package is not available on MELPA yet, so please install it using Quelpa, straight.el, or any package manager you prefer.
+Install =nix-env-install= package from MELPA.
 ** Usage
 *** NPM packages
 Use =nix-env-install-npm= to install npm packages.
