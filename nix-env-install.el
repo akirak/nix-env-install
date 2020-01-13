@@ -335,7 +335,9 @@ where the key is the form and the value is nil."
                       (list "nix-env"
                             "-f" (expand-file-name "default.nix" tmpdir)
                             "-i")
-                      (mapcar (lambda (it) (list "-A" it))
+                      (mapcar (lambda (it) (list "-A"
+                                                 ;; Quote explicitly to support packages including dots, e.g. mermaid.cli
+                                                 (format "\"%s\"" it)))
                               (cl-etypecase packages
                                 (list packages)
                                 (string (list packages)))))
