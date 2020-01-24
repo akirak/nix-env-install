@@ -5,6 +5,8 @@
 [[https://github.com/akirak/nix-env-install/workflows/CI/badge.svg]]
 
 This package lets you install various (currently only npm) packages using the Nix package manager.
+
+[[https://raw.githubusercontent.com/akirak/nix-env-install/screenshots/nix-env-install-npm.gif][file:https://raw.githubusercontent.com/akirak/nix-env-install/screenshots/nix-env-install-npm.gif]]
 ** Table of contents
 :PROPERTIES:
 :TOC: siblings
