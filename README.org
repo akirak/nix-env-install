@@ -11,11 +11,11 @@ This package lets you install various (currently only npm) packages using the Ni
 :PROPERTIES:
 :TOC: siblings
 :END:
-    -  [[#installation][Installation]]
-    -  [[#usage][Usage]]
-      -  [[#npm-packages][NPM packages]]
-      -  [[#uninstalling-packages][Uninstalling packages]]
-    -  [[#license][License]]
+-  [[#installation][Installation]]
+-  [[#usage][Usage]]
+  -  [[#npm-packages][NPM packages]]
+  -  [[#uninstalling-packages][Uninstalling packages]]
+-  [[#license][License]]
 
 ** Installation
 Install =nix-env-install= package from MELPA.
