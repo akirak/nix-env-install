@@ -250,7 +250,9 @@ where the key is the form and the value is nil."
       (executable-find nix-env-install-cachix-executable)))
 
 (cl-defun nix-env-install-cachix (&key (on-finished #'nix-env-install-cachix-setup))
-  "Install cachix, if you haven't already."
+  "Install cachix, if you haven't already.
+
+When the installation process is finished, ON-FINISHED is called."
   (interactive)
   (if (nix-env-install-cachix-exists-p)
       (when (called-interactively-p 'interactive)
